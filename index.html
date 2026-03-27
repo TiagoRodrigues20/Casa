@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>🥗 Home Pantry</title>
+  <style>
+    :root {
+      --bg: #f7f7f5; --surface: #ffffff; --surface2: #f0efeb;
+      --border: #e0ddd6; --accent: #3d7a5e; --accent-light: #e8f4ef;
+      --danger: #c0392b; --danger-light: #fdecea;
+      --warn: #e67e22; --warn-light: #fef5ec;
+      --text: #1a1a1a; --text2: #666;
+      --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 90px; }
+    header { background: var(--accent); color: white; padding: 18px 16px 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+    header h1 { font-size: 1.3rem; font-weight: 700; }
+    header p { font-size: 0.78rem; opacity: 0.8; margin-top: 2px; }
+    nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; z-index: 100; }
+    nav button { flex: 1; border: none; background: none; padding: 10px 4px 12px; font-size: 0.65rem; color: var(--text2); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    nav button .icon { font-size: 1.4rem; }
+    nav button.active { color: var(--accent); font-weight: 600; }
+    .tab { display: none; padding: 16px; }
+    .tab.active { display: block; }
+    .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
+    .card-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-header h2 { font-size: 1rem; font-weight: 700; }
+    .card-body { padding: 12px 16px; }
+    .ing-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .ing-row:last-child { border-bottom: none; }
+    .ing-info { flex: 1; min-width: 0; }
+    .ing-name { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ing-meta { font-size: 0.75rem; color: var(--text2); margin-top: 1px; }
+    .ing-controls { display: flex; align-items: center; gap: 6px; }
+    .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--surface2); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent); flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+    .qty-val { min-width: 28px; text-align: center; font-size: 1rem; font-weight: 700; }
+    .qty-val.low { color: var(--danger); } .qty-val.warn { color: var(--warn); } .qty-val.ok { color: var(--accent); }
+    .badge { font-size: 0.65rem; padding: 2px 7px; border-radius: 20px; font-weight: 600; flex-shrink: 0; }
+    .badge.low { background: var(--danger-light); color: var(--danger); }
+    .badge.warn { background: var(--warn-light); color: var(--warn); }
+    .section-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); margin: 16px 0 8px; }
+    .section-title:first-child { margin-top: 0; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 18px; border-radius: 10px; border: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity 0.15s; }
+    .btn:active { opacity: 0.75; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-danger { background: var(--danger-light); color: var(--danger); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-full { width: 100%; }
+    .btn-sm { padding: 7px 12px; font-size: 0.8rem; border-radius: 8px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 5px; color: var(--text2); }
+    .field input { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: var(--surface); color: var(--text); }
+    .field input:focus { outline: none; border-color: var(--accent); }
+    .recipe-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
+    .recipe-header { padding: 14px 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .recipe-title { font-size: 1rem; font-weight: 700; }
+    .recipe-ings { font-size: 0.78rem; color: var(--text2); margin-top: 3px; }
+    .recipe-status { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; flex-shrink: 0; }
+    .recipe-status.can-make { background: var(--accent-light); color: var(--accent); }
+    .recipe-status.cannot-make { background: #f0f0f0; color: #999; }
+    .shop-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .shop-item:last-child { border-bottom: none; }
+    .shop-item input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--accent); flex-shrink: 0; }
+    .shop-item-name { font-size: 0.95rem; }
+    .shop-item-name.checked { text-decoration: line-through; color: var(--text2); }
+    .shop-item-detail { font-size: 0.75rem; color: var(--text2); }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: flex-end; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px 16px 36px; animation: slideup 0.2s ease; }
+    @keyframes slideup { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: var(--surface2); border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1rem; cursor: pointer; }
+    .ing-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .ing-chip { padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface2); font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px; -webkit-tap-highlight-color: transparent; }
+    .ing-chip.selected { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .empty { text-align: center; padding: 40px 16px; color: var(--text2); }
+    .empty .emoji { font-size: 2.8rem; margin-bottom: 10px; }
+    .empty p { font-size: 0.9rem; line-height: 1.5; }
+    .del-btn { background: none; border: none; color: var(--danger); font-size: 1.1rem; padding: 4px 6px; cursor: pointer; border-radius: 6px; }
+    .qty-row { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 14px 0 20px; }
+    .big-qty-btn { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface2); font-size: 1.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent); -webkit-tap-highlight-color: transparent; }
+    .big-qty-val { font-size: 2.2rem; font-weight: 800; min-width: 64px; text-align: center; }
+    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #222; color: white; padding: 10px 22px; border-radius: 30px; font-size: 0.85rem; font-weight: 600; opacity: 0; transition: all 0.25s; z-index: 300; white-space: nowrap; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .fab { position: fixed; bottom: 76px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 14px rgba(61,122,94,0.4); display: flex; align-items: center; justify-content: center; z-index: 99; -webkit-tap-highlight-color: transparent; }
+    .ing-qty-inline { width: 48px; padding: 3px 6px; border: 1.5px solid var(--accent); border-radius: 8px; font-size: 0.85rem; text-align: center; background: white; color: var(--accent); }
+    .ing-qty-inline:focus { outline: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🥗 Home Pantry</h1>
+  <p id="header-sub">Loading...</p>
+</header>
+
+<div id="tab-stock" class="tab active"></div>
+<div id="tab-recipes" class="tab"></div>
+<div id="tab-shopping" class="tab"></div>
+<div id="tab-settings" class="tab"></div>
+
+<nav>
+  <button class="active" onclick="switchTab('stock',this)"><span class="icon">📦</span>Stock</button>
+  <button onclick="switchTab('recipes',this)"><span class="icon">🍳</span>Recipes</button>
+  <button onclick="switchTab('shopping',this)"><span class="icon">🛒</span>Shop</button>
+  <button onclick="switchTab('settings',this)"><span class="icon">⚙️</span>Manage</button>
+</nav>
+
+<button class="fab" id="fab-btn" onclick="fabAction()">+</button>
+<div class="toast" id="toast"></div>
+
+<!-- Modal: Ingredient -->
+<div class="modal-backdrop" id="modal-ing">
+  <div class="modal">
+    <div class="modal-title"><span id="modal-ing-title">Add Ingredient</span><button class="modal-close" onclick="closeModal('modal-ing')">✕</button></div>
+    <div class="field"><label>Name</label><input id="ing-name" type="text" placeholder="e.g. Chicken" /></div>
+    <div class="field"><label>Unit (optional)</label><input id="ing-unit" type="text" placeholder="e.g. pieces, cans, g" /></div>
+    <div class="field"><label>Current quantity</label><input id="ing-qty" type="number" min="0" placeholder="0" /></div>
+    <div class="field"><label>Minimum threshold (triggers shopping list)</label><input id="ing-min" type="number" min="0" placeholder="e.g. 2" /></div>
+    <button class="btn btn-primary btn-full" onclick="saveIngredient()">Save</button>
+  </div>
+</div>
+
+<!-- Modal: Recipe -->
+<div class="modal-backdrop" id="modal-recipe">
+  <div class="modal">
+    <div class="modal-title"><span id="modal-recipe-title">Add Recipe</span><button class="modal-close" onclick="closeModal('modal-recipe')">✕</button></div>
+    <div class="field"><label>Recipe name</label><input id="recipe-name" type="text" placeholder="e.g. Tuna rice bowl" /></div>
+    <div class="field"><label>Tap ingredients to include, then set quantities</label><div id="recipe-ing-list" class="ing-chips"></div></div>
+    <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="saveRecipe()">Save Recipe</button>
+  </div>
+</div>
+
+<!-- Modal: Cook -->
+<div class="modal-backdrop" id="modal-cook">
+  <div class="modal">
+    <div class="modal-title"><span id="cook-recipe-name">Cook recipe</span><button class="modal-close" onclick="closeModal('modal-cook')">✕</button></div>
+    <p style="font-size:0.88rem;color:var(--text2);margin-bottom:14px;">This will deduct the following from your stock:</p>
+    <div id="cook-deductions"></div>
+    <div style="height:16px"></div>
+    <button class="btn btn-primary btn-full" onclick="confirmCook()">✅ Confirm &amp; Deduct</button>
+  </div>
+</div>
+
+<!-- Modal: Stock update -->
+<div class="modal-backdrop" id="modal-stock">
+  <div class="modal">
+    <div class="modal-title"><span id="stock-modal-name">Update stock</span><button class="modal-close" onclick="closeModal('modal-stock')">✕</button></div>
+    <div class="qty-row">
+      <button class="big-qty-btn" onclick="adjustModalQty(-1)">−</button>
+      <div class="big-qty-val" id="stock-modal-val">0</div>
+      <button class="big-qty-btn" onclick="adjustModalQty(1)">+</button>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveStockUpdate()">Update</button>
+  </div>
+</div>
+
+<script>
+let state = { ingredients: [], recipes: [], shopping_checked: {} };
+
+function load() {
+  try { const s = localStorage.getItem('pantry_v2'); if (s) state = JSON.parse(s); } catch(e) {}
+  if (!state.ingredients) state.ingredients = [];
+  if (!state.recipes) state.recipes = [];
+  if (!state.shopping_checked) state.shopping_checked = {};
+  if (!state.ingredients.length) seedDefaults();
+}
+
+function save() { localStorage.setItem('pantry_v2', JSON.stringify(state)); }
+
+function seedDefaults() {
+  state.ingredients = [
+    { id: uid(), name: 'Chicken', unit: 'pieces', qty: 4, min: 2 },
+    { id: uid(), name: 'Rice', unit: 'cups', qty: 3, min: 1 },
+    { id: uid(), name: 'Vegetables', unit: 'portions', qty: 5, min: 2 },
+    { id: uid(), name: 'Fish', unit: 'fillets', qty: 3, min: 2 },
+    { id: uid(), name: 'Tofu', unit: 'blocks', qty: 2, min: 1 },
+    { id: uid(), name: 'Tuna', unit: 'cans', qty: 3, min: 2 },
+  ];
+  save();
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+let currentTab = 'stock';
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  currentTab = name; render();
+}
+
+function fabAction() {
+  if (currentTab === 'recipes') openAddRecipe();
+  else openAddIngredient();
+}
+
+function render() {
+  updateHeader();
+  if (currentTab === 'stock') renderStock();
+  else if (currentTab === 'recipes') renderRecipes();
+  else if (currentTab === 'shopping') renderShopping();
+  else if (currentTab === 'settings') renderSettings();
+  document.getElementById('fab-btn').style.display = currentTab === 'shopping' ? 'none' : 'flex';
+}
+
+function updateHeader() {
+  const low = state.ingredients.filter(i => i.qty <= i.min).length;
+  document.getElementById('header-sub').textContent = low === 0
+    ? state.ingredients.length + ' ingredients · all stocked ✓'
+    : state.ingredients.length + ' ingredients · ⚠️ ' + low + ' low';
+}
+
+function renderStock() {
+  const el = document.getElementById('tab-stock');
+  const ings = [...state.ingredients].sort((a,b) => {
+    const o = {low:0,warn:1,ok:2};
+    return (o[stockStatus(a)] - o[stockStatus(b)]) || a.name.localeCompare(b.name);
+  });
+  if (!ings.length) { el.innerHTML = `<div class="empty"><div class="emoji">📦</div><p>No ingredients yet.<br>Tap + to add one.</p></div>`; return; }
+  let html = `<div class="card"><div class="card-body">`;
+  ings.forEach(ing => {
+    const st = stockStatus(ing);
+    html += `<div class="ing-row">
+      <div class="ing-info" onclick="openStockModal('${ing.id}')" style="cursor:pointer">
+        <div class="ing-name">${ing.name}</div>
+        <div class="ing-meta">${ing.unit||'units'} · min ${ing.min}</div>
+      </div>
+      ${st!=='ok'?`<span class="badge ${st}">${st==='low'?'Low':'Near'}</span>`:''}
+      <div class="ing-controls">
+        <button class="qty-btn" onclick="quickAdjust('${ing.id}',-1)">−</button>
+        <div class="qty-val ${st}">${ing.qty}</div>
+        <button class="qty-btn" onclick="quickAdjust('${ing.id}',1)">+</button>
+      </div>
+    </div>`;
+  });
+  html += `</div></div>`;
+  el.innerHTML = html;
+}
+
+function stockStatus(ing) {
+  if (ing.qty <= ing.min) return 'low';
+  if (ing.qty <= ing.min + 1) return 'warn';
+  return 'ok';
+}
+
+function quickAdjust(id, delta) {
+  const ing = state.ingredients.find(i => i.id === id);
+  if (ing) { ing.qty = Math.max(0, ing.qty + delta); save(); render(); }
+}
+
+function renderRecipes() {
+  const el = document.getElementById('tab-recipes');
+  if (!state.recipes.length) { el.innerHTML = `<div class="empty"><div class="emoji">🍳</div><p>No recipes yet.<br>Tap + to add one.</p></div>`; return; }
+  const can = state.recipes.filter(r => canMakeRecipe(r));
+  const cannot = state.recipes.filter(r => !canMakeRecipe(r));
+  let html = '';
+  if (can.length) { html += `<div class="section-title">✅ Can make now (${can.length})</div>`; can.forEach(r => { html += recipeCardHTML(r, true); }); }
+  if (cannot.length) { html += `<div class="section-title">🚫 Missing ingredients (${cannot.length})</div>`; cannot.forEach(r => { html += recipeCardHTML(r, false); }); }
+  el.innerHTML = html;
+}
+
+function canMakeRecipe(r) {
+  return r.ingredients.every(ri => { const ing = state.ingredients.find(i => i.id === ri.id); return ing && ing.qty >= ri.qty; });
+}
+
+function recipeCardHTML(recipe, can) {
+  const ingNames = recipe.ingredients.map(ri => { const ing = state.ingredients.find(i => i.id === ri.id); return ing ? `${ri.qty}${ing.unit?' '+ing.unit:''} ${ing.name}` : '?'; }).join(', ') || 'No ingredients';
+  return `<div class="recipe-card">
+    <div class="recipe-header">
+      <div style="flex:1;min-width:0"><div class="recipe-title">${recipe.name}</div><div class="recipe-ings">${ingNames}</div></div>
+      <span class="recipe-status ${can?'can-make':'cannot-make'}">${can?'✓ Ready':'Missing'}</span>
+    </div>
+    <div style="padding:0 16px 14px;display:flex;gap:8px;flex-wrap:wrap">
+      ${can?`<button class="btn btn-primary btn-sm" onclick="openCook('${recipe.id}')">🍳 Cook</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="openEditRecipe('${recipe.id}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteRecipe('${recipe.id}')">Delete</button>
+    </div>
+  </div>`;
+}
+
+function renderShopping() {
+  const el = document.getElementById('tab-shopping');
+  const items = state.ingredients.filter(i => i.qty <= i.min);
+  if (!items.length) { el.innerHTML = `<div class="empty"><div class="emoji">🛒</div><p>Nothing to buy!<br>All items above minimum.</p></div>`; return; }
+  let html = `<div class="card"><div class="card-header"><h2>Shopping list</h2><button class="btn btn-ghost btn-sm" onclick="clearChecked()">Clear done</button></div><div class="card-body">`;
+  items.forEach(ing => {
+    const checked = !!state.shopping_checked[ing.id];
+    const needed = Math.max(1, ing.min * 2 - ing.qty);
+    html += `<div class="shop-item">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleCheck('${ing.id}',this.checked)" />
+      <div style="flex:1">
+        <div class="shop-item-name ${checked?'checked':''}">${ing.name}</div>
+        <div class="shop-item-detail">Buy ~${needed} ${ing.unit||'units'} · have ${ing.qty}, min ${ing.min}</div>
+      </div>
+    </div>`;
+  });
+  html += `</div></div><button class="btn btn-primary btn-full" style="margin-top:4px" onclick="restockChecked()">✅ Mark checked as restocked</button>`;
+  el.innerHTML = html;
+}
+
+function toggleCheck(id, val) { state.shopping_checked[id] = val; save(); }
+function clearChecked() { state.shopping_checked = {}; save(); render(); }
+function restockChecked() {
+  Object.keys(state.shopping_checked).forEach(id => {
+    if (state.shopping_checked[id]) { const ing = state.ingredients.find(i => i.id === id); if (ing) ing.qty = ing.min * 2; }
+  });
+  state.shopping_checked = {}; save(); render(); toast('Stock updated!');
+}
+
+function renderSettings() {
+  const el = document.getElementById('tab-settings');
+  let html = `<div class="section-title">Ingredients (${state.ingredients.length})</div>`;
+  if (!state.ingredients.length) { html += `<div class="empty"><div class="emoji">🥕</div><p>No ingredients yet.</p></div>`; }
+  else {
+    html += `<div class="card"><div class="card-body">`;
+    state.ingredients.forEach(ing => {
+      html += `<div class="ing-row">
+        <div class="ing-info"><div class="ing-name">${ing.name}</div><div class="ing-meta">Unit: ${ing.unit||'—'} · Min: ${ing.min}</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="openEditIngredient('${ing.id}')">Edit</button>
+        <button class="del-btn" onclick="deleteIngredient('${ing.id}')">🗑</button>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+  html += `<button class="btn btn-primary btn-full" style="margin-top:8px" onclick="openAddIngredient()">+ Add Ingredient</button>`;
+  html += `<div class="section-title" style="margin-top:22px">Data backup</div>
+    <div class="card"><div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="exportData()">📤 Export JSON</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">📥 Import JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)" />
+    </div></div>`;
+  el.innerHTML = html;
+}
+
+let editingIngId = null;
+function openAddIngredient() {
+  editingIngId = null;
+  document.getElementById('modal-ing-title').textContent = 'Add Ingredient';
+  ['ing-name','ing-unit','ing-qty','ing-min'].forEach(id => document.getElementById(id).value = '');
+  openModal('modal-ing');
+}
+function openEditIngredient(id) {
+  editingIngId = id;
+  const ing = state.ingredients.find(i => i.id === id);
+  document.getElementById('modal-ing-title').textContent = 'Edit Ingredient';
+  document.getElementById('ing-name').value = ing.name;
+  document.getElementById('ing-unit').value = ing.unit||'';
+  document.getElementById('ing-qty').value = ing.qty;
+  document.getElementById('ing-min').value = ing.min;
+  openModal('modal-ing');
+}
+function saveIngredient() {
+  const name = document.getElementById('ing-name').value.trim();
+  if (!name) { toast('Enter a name'); return; }
+  const unit = document.getElementById('ing-unit').value.trim();
+  const qty = parseInt(document.getElementById('ing-qty').value)||0;
+  const min = parseInt(document.getElementById('ing-min').value)||1;
+  if (editingIngId) { const ing = state.ingredients.find(i => i.id === editingIngId); Object.assign(ing,{name,unit,qty,min}); }
+  else state.ingredients.push({id:uid(),name,unit,qty,min});
+  save(); closeModal('modal-ing'); render();
+  toast(editingIngId ? 'Updated' : 'Ingredient added');
+}
+function deleteIngredient(id) {
+  if (!confirm('Delete this ingredient? It will be removed from recipes too.')) return;
+  state.ingredients = state.ingredients.filter(i => i.id !== id);
+  state.recipes.forEach(r => { r.ingredients = r.ingredients.filter(ri => ri.id !== id); });
+  save(); render(); toast('Deleted');
+}
+
+let stockModalId = null, stockModalVal = 0;
+function openStockModal(id) {
+  stockModalId = id;
+  const ing = state.ingredients.find(i => i.id === id);
+  stockModalVal = ing.qty;
+  document.getElementById('stock-modal-name').textContent = ing.name;
+  document.getElementById('stock-modal-val').textContent = stockModalVal;
+  openModal('modal-stock');
+}
+function adjustModalQty(delta) { stockModalVal = Math.max(0, stockModalVal+delta); document.getElementById('stock-modal-val').textContent = stockModalVal; }
+function saveStockUpdate() {
+  const ing = state.ingredients.find(i => i.id === stockModalId);
+  ing.qty = stockModalVal; save(); closeModal('modal-stock'); render(); toast('Stock updated');
+}
+
+let editingRecipeId = null, selectedRecipeIngs = {};
+function openAddRecipe() {
+  editingRecipeId = null; selectedRecipeIngs = {};
+  document.getElementById('modal-recipe-title').textContent = 'Add Recipe';
+  document.getElementById('recipe-name').value = '';
+  renderIngChips(); openModal('modal-recipe');
+}
+function openEditRecipe(id) {
+  editingRecipeId = id;
+  const r = state.recipes.find(r => r.id === id);
+  selectedRecipeIngs = {}; r.ingredients.forEach(ri => { selectedRecipeIngs[ri.id] = ri.qty; });
+  document.getElementById('modal-recipe-title').textContent = 'Edit Recipe';
+  document.getElementById('recipe-name').value = r.name;
+  renderIngChips(); openModal('modal-recipe');
+}
+function renderIngChips() {
+  const container = document.getElementById('recipe-ing-list');
+  if (!state.ingredients.length) { container.innerHTML = `<p style="font-size:0.82rem;color:var(--text2)">Add ingredients first in Manage tab.</p>`; return; }
+  let html = '';
+  state.ingredients.forEach(ing => {
+    const sel = selectedRecipeIngs[ing.id] !== undefined;
+    const qty = sel ? selectedRecipeIngs[ing.id] : 1;
+    html += `<div class="ing-chip ${sel?'selected':''}" id="chip-${ing.id}" onclick="toggleChip('${ing.id}')">
+      ${ing.name}
+      ${sel?`<input class="ing-qty-inline" type="number" min="1" value="${qty}" id="chip-qty-${ing.id}" onclick="event.stopPropagation()" oninput="updateChipQty('${ing.id}',this.value)" />`:''}
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+function toggleChip(id) { if (selectedRecipeIngs[id]!==undefined) delete selectedRecipeIngs[id]; else selectedRecipeIngs[id]=1; renderIngChips(); }
+function updateChipQty(id, val) { selectedRecipeIngs[id] = Math.max(1, parseInt(val)||1); }
+function saveRecipe() {
+  const name = document.getElementById('recipe-name').value.trim();
+  if (!name) { toast('Enter a recipe name'); return; }
+  Object.keys(selectedRecipeIngs).forEach(id => { const el = document.getElementById('chip-qty-'+id); if (el) selectedRecipeIngs[id] = Math.max(1, parseInt(el.value)||1); });
+  const ings = Object.entries(selectedRecipeIngs).map(([id,qty]) => ({id,qty}));
+  if (editingRecipeId) { const r = state.recipes.find(r => r.id === editingRecipeId); r.name = name; r.ingredients = ings; }
+  else state.recipes.push({id:uid(), name, ingredients:ings});
+  save(); closeModal('modal-recipe'); render();
+  toast(editingRecipeId ? 'Recipe updated' : 'Recipe saved');
+}
+function deleteRecipe(id) {
+  if (!confirm('Delete this recipe?')) return;
+  state.recipes = state.recipes.filter(r => r.id !== id);
+  save(); render(); toast('Recipe deleted');
+}
+
+let cookingRecipeId = null;
+function openCook(id) {
+  cookingRecipeId = id;
+  const r = state.recipes.find(r => r.id === id);
+  document.getElementById('cook-recipe-name').textContent = 'Cook: ' + r.name;
+  let html = `<div class="card"><div class="card-body">`;
+  r.ingredients.forEach(ri => { const ing = state.ingredients.find(i => i.id === ri.id); if (!ing) return; html += `<div class="ing-row"><div class="ing-info"><div class="ing-name">${ing.name}</div></div><div style="font-size:0.9rem;color:var(--danger);font-weight:600">−${ri.qty} ${ing.unit||''}</div></div>`; });
+  html += `</div></div>`;
+  document.getElementById('cook-deductions').innerHTML = html;
+  openModal('modal-cook');
+}
+function confirmCook() {
+  const r = state.recipes.find(r => r.id === cookingRecipeId);
+  r.ingredients.forEach(ri => { const ing = state.ingredients.find(i => i.id === ri.id); if (ing) ing.qty = Math.max(0, ing.qty - ri.qty); });
+  save(); closeModal('modal-cook'); render(); toast('Cooked ' + r.name + '!');
+}
+
+function exportData() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
+  a.download = 'pantry_backup.json'; a.click(); toast('Exported!');
+}
+function importData(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { try { const imp = JSON.parse(e.target.result); if (imp.ingredients && imp.recipes) { state = imp; if (!state.shopping_checked) state.shopping_checked = {}; save(); render(); toast('Imported!'); } else toast('Invalid file'); } catch { toast('Import failed'); } };
+  reader.readAsText(file); input.value = '';
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(el => { el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); }); });
+
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+
+load(); render();
+</script>
+</body>
+</html>
