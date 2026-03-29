@@ -160,15 +160,33 @@
 <script>
 let state = { ingredients: [], recipes: [], shopping_checked: {} };
 
-function load() {
-  try { const s = localStorage.getItem('pantry_v2'); if (s) state = JSON.parse(s); } catch(e) {}
-  if (!state.ingredients) state.ingredients = [];
-  if (!state.recipes) state.recipes = [];
-  if (!state.shopping_checked) state.shopping_checked = {};
-  if (!state.ingredients.length) seedDefaults();
+const API = "/api/pantry";
+let saveTimer = null;
+
+async function load() {
+  try {
+    const res = await fetch(API);
+    const data = await res.json();
+    state.ingredients      = data.ingredients      || [];
+    state.recipes          = data.recipes          || [];
+    state.shopping_checked = data.shopping_checked || {};
+    if (!state.ingredients.length) { seedDefaults(); return; }
+  } catch(e) { console.error("Load failed", e); }
+  render();
 }
 
-function save() { localStorage.setItem('pantry_v2', JSON.stringify(state)); }
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state)
+      });
+    } catch(e) { console.error("Save failed", e); }
+  }, 800);
+}
 
 function seedDefaults() {
   state.ingredients = [
@@ -179,7 +197,7 @@ function seedDefaults() {
     { id: uid(), name: 'Tofu', unit: 'blocks', qty: 2, min: 1 },
     { id: uid(), name: 'Tuna', unit: 'cans', qty: 3, min: 2 },
   ];
-  save();
+  save(); render();
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -469,7 +487,7 @@ document.querySelectorAll('.modal-backdrop').forEach(el => { el.addEventListener
 
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
 
-load(); render();
+load();
 </script>
 </body>
 </html>
