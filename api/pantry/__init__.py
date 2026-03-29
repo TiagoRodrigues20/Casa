@@ -5,7 +5,7 @@ from azure.cosmos import CosmosClient, exceptions
 
 COSMOS_URL = os.environ["COSMOS_URL"]
 COSMOS_KEY = os.environ["COSMOS_KEY"]
-DB_NAME    = os.environ.get("COSMOS_DB", "state")
+DB_NAME    = os.environ.get("COSMOS_DB", "pantry")
 CONTAINER  = os.environ.get("COSMOS_CONTAINER", "state")
 DOC_ID     = "pantry_state"
 
